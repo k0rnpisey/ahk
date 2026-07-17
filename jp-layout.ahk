@@ -1,4 +1,8 @@
-﻿; Map 無変換 (Muhenkan) to left click (including click and hold)
+﻿
+
+
+
+; Map 無変換 (Muhenkan) to left click (including click and hold)
 SC07B::
     Click, down  ; Press and hold left mouse button
     KeyWait, SC07B  ; Wait until the key is released
@@ -6,15 +10,17 @@ SC07B::
 return
 
 ; Map 変換 to left click (including click and hold)
-SC079::
-    Click, down  ; Press and hold left mouse button
-    KeyWait, SC079  ; Wait until the key is released
-    Click, up  ; Release left mouse button
+;SC079::
+;    Click, down  ; Press and hold left mouse button
+;    KeyWait, SC079  ; Wait until the key is released
+;    Click, up  ; Release left mouse button
+;return
+
+SC06F::
+    Click, down
+    KeyWait, SC06F
+    Click, up
 return
-
-^Insert::Media_Play_Pause
-
-
 
 
 ; Function to resize and center window with specified width percentage
@@ -95,7 +101,41 @@ WinMove, A,, PosX, PosY, WindowWidth, WindowHeight
 return
 
 
+^+#-:: ; Ctrl + Shift + Win + - : apply ~24" size to ALL open windows
+GetActiveMonitorWorkArea(WorkAreaLeft, WorkAreaTop, WorkAreaRight, WorkAreaBottom)
+WorkAreaWidth := WorkAreaRight - WorkAreaLeft
+WorkAreaHeight := WorkAreaBottom - WorkAreaTop
 
+WindowWidth := WorkAreaWidth * 0.86
+WindowHeight := WorkAreaHeight * 0.86
+PosX := WorkAreaLeft + (WorkAreaWidth - WindowWidth) / 2
+PosY := WorkAreaTop + (WorkAreaHeight - WindowHeight) / 2  ; center vertically
+
+WinGet, WindowList, List  ; get all top-level windows
+Loop, %WindowList%
+{
+    WinID := WindowList%A_Index%
+    WinGetTitle, Title, ahk_id %WinID%
+    WinGet, Style, Style, ahk_id %WinID%
+
+    ; Skip untitled windows and non-visible/tool windows
+    if (Title = "" || Title = "Program Manager")
+        continue
+    if !(Style & 0x10000000)  ; WS_VISIBLE
+        continue
+    if !(Style & 0x00C00000)  ; WS_CAPTION (skip borderless/system windows)
+        continue
+
+    ; Skip minimized windows — only act on windows already visible on screen
+    WinGet, MinMax, MinMax, ahk_id %WinID%
+    if (MinMax = -1)
+        continue
+    if (MinMax = 1)  ; restore maximized windows so they can be resized
+        WinRestore, ahk_id %WinID%
+
+    WinMove, ahk_id %WinID%,, PosX, PosY, WindowWidth, WindowHeight
+}
+return
 
 
 ; Normal movement with Win + Arrow (100 pixels)
@@ -151,20 +191,6 @@ return
 WinGetPos,,, Width, Height, A
 WinMove, A, , , , Width, Height+100
 return
-
-
-#!Left::Send #{Left}
-#!Right::Send #{Right}
-
-; Ctrl + Shift + Win + Left/Right to switch between virtual desktops
-^+#Left::Send ^#{Left}
-^+#Right::Send ^#{Right}
-
-
-
-
-
-
 
 
 
@@ -257,30 +283,6 @@ return
 
 
 
-; JP Layout Navigation Key Mappings
-; Author: Custom mapping for Japanese keyboard layout
-; Left Win + navigation keys for Home/End/PageUp/PageDown
-
-; Left Win + < to Home
-LWin & <::Send, {Home}
-
-; Left Win + > to End  
-LWin & >::Send, {End}
-
-; Left Win + \ to Page Down
-LWin & SC073::Send, {PgDn}
-
-; Left Win + / to Page Up
-LWin & /::Send, {PgUp}
-
-; Use Ctrl+Up/Down for smooth scrolling in Chrome
-#If WinActive("ahk_exe chrome.exe")
-    ^Up::Send, {WheelUp 3}     ; Smooth scroll up
-    ^Down::Send, {WheelDown 3} ; Smooth scroll down
-#If
-
-
-
 
 ResizeWindowBox(percent) {
     WinRestore, A
@@ -317,6 +319,13 @@ ResizeWindowBox(percent) {
 return
 
 
+;; This shortcut is remapped because Win + Arrow snaps windows by default, conflicting with our pane move.
+#!Left::Send #{Left}
+#!Right::Send #{Right}
+
+; Ctrl + Shift + Win + Left/Right to switch between virtual desktops
+^+#Left::Send ^#{Left}
+^+#Right::Send ^#{Right}
 
 ; Remap Insert to PageUp
 Insert::PgUp
@@ -324,8 +333,45 @@ Insert::PgUp
 ; Remap Delete to PageDown
 Delete::PgDn
 
+
+
+; Right Ctrl as Fn modifier
+>^F10::Send,{Media_Play_Pause}
+>^F11::Send,{Volume_Mute}
+>^F12::Send,{Volume_Down}
+>^Insert::Send,{Volume_Up}++++++++++
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ; Map Print Screen to Home
-PrintScreen::Home
+;PrintScreen::Home
 
 ; Map Pause/Break to End
-Pause::End
+;Pause::End
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; JP Layout Navigation Key Mappings
+; Author: Custom mapping for Japanese keyboard layout
+; Left Win + navigation keys for Home/End/PageUp/PageDown
+
+; Left Win + < to Home
+LWin & <::Send, {Home}
+
+; Left Win + > to End  
+LWin & >::Send, {End}
+
+; Left Win + \ to Page Down
+LWin & SC073::Send, {PgDn}
+
+; Left Win + / to Page Up
+LWin & /::Send, {PgUp}
+
+; Use Ctrl+Up/Down for smooth scrolling in Chrome
+#If WinActive("ahk_exe chrome.exe")
+    ^Up::Send, {WheelUp 3}     ; Smooth scroll up
+    ^Down::Send, {WheelDown 3} ; Smooth scroll down
+#If

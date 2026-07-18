@@ -83,7 +83,26 @@ ResizeWindow(widthPercent) {
 +#7::ResizeWindow(0.7)  ; Shift + Win + 7: 70% width
 +#8::ResizeWindow(0.8)  ; Shift + Win + 8: 80% width
 +#9::ResizeWindow(0.9)  ; Shift + Win + 9: 90% width
-+#0::ResizeWindowBox(0.55)  ; Shift + Win + 0: ~15" square, centered
++#0::  ; Shift + Win + 0: 3:2 window (matches BenQ RD280U aspect), centered
+    WinRestore, A
+    GetActiveMonitorWorkArea(WorkAreaLeft, WorkAreaTop, WorkAreaRight, WorkAreaBottom)
+    WorkAreaWidth := WorkAreaRight - WorkAreaLeft
+    WorkAreaHeight := WorkAreaBottom - WorkAreaTop
+
+    NewWidth := WorkAreaWidth * 0.75
+    NewHeight := Floor(NewWidth * 2 / 3)  ; 3:2 aspect ratio
+
+    ; Cap height to screen height if needed
+    if (NewHeight > WorkAreaHeight) {
+        NewHeight := WorkAreaHeight
+        NewWidth := Floor(NewHeight * 3 / 2)
+    }
+
+    NewX := WorkAreaLeft + (WorkAreaWidth - NewWidth) // 2
+    NewY := WorkAreaTop + (WorkAreaHeight - NewHeight) // 2
+
+    WinMove, A,, NewX, NewY, NewWidth, NewHeight
+return
 
 
 +#-:: ; Shift + Win + - : ~24" window width

@@ -105,6 +105,47 @@ ResizeWindow(widthPercent) {
 return
 
 
+^+#0:: ; Ctrl + Shift + Win + 0 : apply 3:2 size to ALL open windows, centered
+    GetActiveMonitorWorkArea(WorkAreaLeft, WorkAreaTop, WorkAreaRight, WorkAreaBottom)
+    WorkAreaWidth := WorkAreaRight - WorkAreaLeft
+    WorkAreaHeight := WorkAreaBottom - WorkAreaTop
+
+    NewWidth := WorkAreaWidth * 0.75
+    NewHeight := Floor(NewWidth * 2 / 3)  ; 3:2 aspect ratio
+
+    if (NewHeight > WorkAreaHeight) {
+        NewHeight := WorkAreaHeight
+        NewWidth := Floor(NewHeight * 3 / 2)
+    }
+
+    PosX := WorkAreaLeft + (WorkAreaWidth - NewWidth) // 2
+    PosY := WorkAreaTop + (WorkAreaHeight - NewHeight) // 2
+
+    WinGet, WindowList, List
+    Loop, %WindowList%
+    {
+        WinID := WindowList%A_Index%
+        WinGetTitle, Title, ahk_id %WinID%
+        WinGet, Style, Style, ahk_id %WinID%
+
+        if (Title = "" || Title = "Program Manager")
+            continue
+        if !(Style & 0x10000000)  ; WS_VISIBLE
+            continue
+        if !(Style & 0x00C00000)  ; WS_CAPTION
+            continue
+
+        WinGet, MinMax, MinMax, ahk_id %WinID%
+        if (MinMax = -1)
+            continue
+        if (MinMax = 1)
+            WinRestore, ahk_id %WinID%
+
+        WinMove, ahk_id %WinID%,, PosX, PosY, NewWidth, NewHeight
+    }
+return
+
+
 +#-:: ; Shift + Win + - : ~24" window width
 GetActiveMonitorWorkArea(WorkAreaLeft, WorkAreaTop, WorkAreaRight, WorkAreaBottom)
 WorkAreaWidth := WorkAreaRight - WorkAreaLeft

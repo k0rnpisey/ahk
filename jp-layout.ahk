@@ -395,11 +395,13 @@ Delete::PgDn
 
 
 
-; Right Ctrl as Fn modifier
+; Left or Right Ctrl as Fn modifier
 >^F10::Send,{Media_Play_Pause}
->^F11::Send,{Volume_Mute}
->^F12::Send,{Volume_Down}
->^Insert::Send,{Volume_Up}++++++++++
+<^F10::Send,{Media_Play_Pause}
+>^F11::Send,{Volume_Down}
+<^F11::Send,{Volume_Down}
+>^F12::Send,{Volume_Up}
+<^F12::Send,{Volume_Up}
 
 
 

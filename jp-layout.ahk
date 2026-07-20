@@ -105,6 +105,23 @@ ResizeWindow(widthPercent) {
 return
 
 
++#=::  ; Shift + Win + = : window physically sized like an Apple 24" display (16:9), centered
+    ; A 24" 16:9 window on a 32" 16:9 monitor = 24/32 = 0.75 of the monitor's linear size.
+    WinRestore, A
+    GetActiveMonitorFullArea(MonLeft, MonTop, MonRight, MonBottom)
+    MonWidth := MonRight - MonLeft
+    MonHeight := MonBottom - MonTop
+
+    NewWidth := Floor(MonWidth * 24 / 32)   ; 0.75 of full width
+    NewHeight := Floor(NewWidth * 9 / 16)   ; keep 16:9 aspect
+
+    NewX := MonLeft + (MonWidth - NewWidth) // 2
+    NewY := MonTop + (MonHeight - NewHeight) // 2
+
+    WinMove, A,, NewX, NewY, NewWidth, NewHeight
+return
+
+
 ^+#0:: ; Ctrl + Shift + Win + 0 : apply 3:2 size to ALL open windows, centered
     GetActiveMonitorWorkArea(WorkAreaLeft, WorkAreaTop, WorkAreaRight, WorkAreaBottom)
     WorkAreaWidth := WorkAreaRight - WorkAreaLeft
@@ -287,6 +304,34 @@ GetActiveMonitorWorkArea(ByRef WorkAreaLeft, ByRef WorkAreaTop, ByRef WorkAreaRi
     WorkAreaTop := MonitorWorkAreaTop
     WorkAreaRight := MonitorWorkAreaRight
     WorkAreaBottom := MonitorWorkAreaBottom
+}
+
+; Function to get the FULL bounds (including taskbar area) of the monitor containing the active window
+GetActiveMonitorFullArea(ByRef MonLeft, ByRef MonTop, ByRef MonRight, ByRef MonBottom) {
+    WinGetPos, WinX, WinY, WinWidth, WinHeight, A
+    SysGet, MonitorCount, MonitorCount
+
+    WinCenterX := WinX + WinWidth // 2
+    WinCenterY := WinY + WinHeight // 2
+
+    Loop, %MonitorCount% {
+        SysGet, Area, Monitor, %A_Index%
+        if (WinCenterX >= AreaLeft && WinCenterX <= AreaRight
+            && WinCenterY >= AreaTop && WinCenterY <= AreaBottom) {
+            MonLeft := AreaLeft
+            MonTop := AreaTop
+            MonRight := AreaRight
+            MonBottom := AreaBottom
+            return
+        }
+    }
+
+    ; Fallback: primary monitor
+    SysGet, Area, Monitor, 1
+    MonLeft := AreaLeft
+    MonTop := AreaTop
+    MonRight := AreaRight
+    MonBottom := AreaBottom
 }
 
 ^!c:: ; Ctrl + Alt + C to center the active window without resizing

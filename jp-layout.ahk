@@ -163,6 +163,42 @@ return
 return
 
 
+^+#=:: ; Ctrl + Shift + Win + = : apply Apple 24" (16:9) size to ALL open windows, centered
+    GetActiveMonitorFullArea(MonLeft, MonTop, MonRight, MonBottom)
+    MonWidth := MonRight - MonLeft
+    MonHeight := MonBottom - MonTop
+
+    NewWidth := Floor(MonWidth * 24 / 32)   ; 0.75 of full width
+    NewHeight := Floor(NewWidth * 9 / 16)   ; keep 16:9 aspect
+
+    PosX := MonLeft + (MonWidth - NewWidth) // 2
+    PosY := MonTop + (MonHeight - NewHeight) // 2
+
+    WinGet, WindowList, List
+    Loop, %WindowList%
+    {
+        WinID := WindowList%A_Index%
+        WinGetTitle, Title, ahk_id %WinID%
+        WinGet, Style, Style, ahk_id %WinID%
+
+        if (Title = "" || Title = "Program Manager")
+            continue
+        if !(Style & 0x10000000)  ; WS_VISIBLE
+            continue
+        if !(Style & 0x00C00000)  ; WS_CAPTION
+            continue
+
+        WinGet, MinMax, MinMax, ahk_id %WinID%
+        if (MinMax = -1)
+            continue
+        if (MinMax = 1)
+            WinRestore, ahk_id %WinID%
+
+        WinMove, ahk_id %WinID%,, PosX, PosY, NewWidth, NewHeight
+    }
+return
+
+
 +#-:: ; Shift + Win + - : ~24" window width
 GetActiveMonitorWorkArea(WorkAreaLeft, WorkAreaTop, WorkAreaRight, WorkAreaBottom)
 WorkAreaWidth := WorkAreaRight - WorkAreaLeft
